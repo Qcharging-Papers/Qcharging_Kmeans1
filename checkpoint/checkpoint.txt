@@ -1,0 +1,1 @@
+This folder contains checkpoints of experiments in pickle format
