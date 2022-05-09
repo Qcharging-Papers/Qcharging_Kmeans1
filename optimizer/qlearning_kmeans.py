@@ -62,5 +62,5 @@ class Q_learningv2:
             # print(self.reward_max[self.state])
             # print(self.action_list[self.state])
     
-    def net_partition(self, net=None, netpart_func=network_clustering):
-        self.action_list = network_clustering_v2(self, network=net, nb_cluster=self.nb_action)
+    def net_partition(self, net=None, net_clustering_func=network_clustering):
+        self.action_list = net_clustering_func(self, network=net, nb_cluster=self.nb_action)
