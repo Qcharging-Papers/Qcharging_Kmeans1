@@ -32,7 +32,6 @@ $ pip install -r requirements.txt
 data
 ├── MC.csv
 ├── cluster.csv
-├── hole.csv
 ├── node.csv
 ├── package.csv
 ├── prob.csv
