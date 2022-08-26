@@ -98,6 +98,9 @@ def get_charging_time(network=None, mc = None, q_learning=None, time_stem=0, sta
             if other_mc.id != mc.id and other_mc.get_status() == "charging":
                 d = distance.euclidean(other_mc.current, node.location)
                 p1 += (para.alpha / (d + para.beta) ** 2)*(other_mc.end_time - time_stem)
+            elif other_mc.id != mc.id and other_mc.get_status() == "moving" and other_mc.state != len(q_learning.q_table) - 1:
+                d = distance.euclidean(other_mc.end, node.location)
+                p1 += (para.alpha / (d + para.beta) ** 2)*(other_mc.end_time - other_mc.arrival_time)
         if node.energy - time_move * node.avg_energy + p1 < energy_min and p - node.avg_energy > 0:
             s1.append((node.id, p, p1))
         if node.energy - time_move * node.avg_energy + p1 > energy_min and p - node.avg_energy < 0:
@@ -138,7 +141,7 @@ def network_clustering(optimizer, network=None, nb_cluster=81):
         Y.append(node.avg_energy**0.5)
     X = np.array(X)
     Y = np.array(Y)
-    print(Y)
+    # print(Y)
     d = np.linalg.norm(Y)
     Y = Y/d
     kmeans = KMeans(n_clusters=nb_cluster, random_state=0).fit(X, sample_weight=Y)
@@ -146,7 +149,7 @@ def network_clustering(optimizer, network=None, nb_cluster=81):
     for pos in kmeans.cluster_centers_:
         charging_pos.append((int(pos[0]), int(pos[1])))
     charging_pos.append(para.depot)
-    print(charging_pos, file=open('log/centroid.txt', 'w'))
+    # print(charging_pos, file=open('log/centroid.txt', 'w'))
     node_distribution_plot(network=network, charging_pos=charging_pos)
     network_plot(network=network, charging_pos=charging_pos)
     return charging_pos
@@ -166,17 +169,17 @@ def network_clustering_v2(optimizer, network=None, nb_cluster=81):
             Y.append(node.avg_energy)
     X = np.array(X)
     Y = np.array(Y)
-    print(Y)
+    # print(Y)
     d = np.linalg.norm(Y)
     Y = Y/d
-    print(d)
-    print(Y)
+    # print(d)
+    # print(Y)
     kmeans = KMeans(n_clusters=nb_cluster, random_state=0).fit(X)
     charging_pos = []
     for pos in kmeans.cluster_centers_:
         charging_pos.append((int(pos[0]), int(pos[1])))
     charging_pos.append(para.depot)
-    print(charging_pos, file=open('log/centroid.txt', 'w'))
+    # print(charging_pos, file=open('log/centroid.txt', 'w'))
     # node_distribution_plot(network=network, charging_pos=charging_pos)
     network_plot(network=network, charging_pos=charging_pos)
     return charging_pos

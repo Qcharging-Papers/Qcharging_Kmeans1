@@ -44,7 +44,7 @@ data
 ### 2. Run:
 
 ```bash
-python3 simulate.py
+python simulate.py
 ```
 - You can choose to `RESUME` unfinished experiments or to `START` new experiments
 - Experiment type and index must be input

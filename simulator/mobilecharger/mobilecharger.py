@@ -16,12 +16,15 @@ class MobileCharger:
         self.end = end  # to location
         self.current = start  # location now
         self.end_time = -1
+        self.moving_time = 0
+        self.arrival_time = 0
 
         self.energy = energy  # energy now
         self.capacity = capacity  # capacity of mc
         self.e_move = e_move  # energy for moving
         self.e_self_charge = e_self_charge  # energy receive per second
         self.velocity = velocity  # velocity of mc
+        self.state = 80 # Current state in Q_table
 
     def get_status(self):
         if not self.is_active:
@@ -57,8 +60,9 @@ class MobileCharger:
         next_location, charging_time = optimizer.update(self, network, time_stem)
         self.start = self.current
         self.end = next_location
-        moving_time = distance.euclidean(self.start, self.end) / self.velocity
-        self.end_time = time_stem + moving_time + charging_time
+        self.moving_time = distance.euclidean(self.start, self.end) / self.velocity
+        self.end_time = time_stem + self.moving_time + charging_time
+        self.arrival_time = time_stem + self.moving_time
 
     def run(self, network, time_stem, net=None, optimizer=None):
         # print(self.energy, self.start, self.end, self.current)

@@ -2,34 +2,51 @@ import csv
 import pandas as pd
 import random
 import pickle
-from os.path import exists
+import os
 from ast import literal_eval
 from scipy import mean
 from scipy.stats import sem, t
+from tabulate import tabulate
 
 from optimizer.qlearning_kmeans import Q_learningv2
 from simulator.mobilecharger.mobilecharger import MobileCharger
 from simulator.network.network import Network
 from simulator.node.node import Node
 
+def get_experiment(simulation_type):
+    while True:
+        try:
+            experiment_type = input('Enter Experiment type: ')
+            experiment_index = int(input('Enter Experiment index: '))
+            if simulation_type == 'start':
+                df = pd.read_csv("data/" + experiment_type + ".csv")
+                return df, experiment_type, experiment_index
+            else:
+                checkpoint_file = 'checkpoint/checkpoint_{}_{}.pkl'.format(experiment_type, experiment_index)
+                with open(checkpoint_file, 'rb') as f:
+                    checkpoint = pickle.load(f)
+                return checkpoint, experiment_type, experiment_index
+        except Exception as e:
+            if simulation_type=='start':
+                print('Experiment does not exist! Please try again.')
+            else:
+                print('Experiment checkpoint does not exist! Please try a again.')
+
 
 
 def start_simulating():
-    print('Starting new experiment...')
-    experiment_type = input('Enter Experiment type(node/target/MC/prob/cluster): ')
-    df = pd.read_csv("data/" + experiment_type + ".csv")
-    experiment_index = int(input('Enter Experiment index(0..4): '))
+    print('[Simulator]Starting new experiment...')
+    df, experiment_type, experiment_index = get_experiment('start')
 
-    # | Experiment_index      Experiment_type|    0    |    1    |    2    |    3     |    4   |
-    # |--------------------------------------|---------|---------|---------|----------|--------|
-    # | **node**                             |   700   |   800   | __900__ |   1000   |   1100 |
-    # | **target**                           |   500   |   550   | __600__ |   650    |   700  |
-    # | **MC**                               |   2     | __3__   |   4     |   5      |   6    |
-    # | **prob**                             |   0.5   | __0.6__ |   0.7   |   0.8    |   0.9  |
-    # | **package**                          | __500__ |   550   |   600   |   650    |   700  |
-    # | **cluster**                          |   40    |   50    |   60    |   70     | __80__ |
 
-    # Define output file
+    try:
+        os.makedirs('log')
+    except FileExistsError:
+        pass
+    try:
+        os.makedirs('fig')
+    except FileExistsError:
+        pass
     output_file = open("log/q_learning_Kmeans.csv", "w")
     result = csv.DictWriter(output_file, fieldnames=["nb_run", "lifetime", "dead_node"])
     result.writeheader()
@@ -71,14 +88,18 @@ def start_simulating():
         target = [int(item) for item in df.target[experiment_index].split(',')]
         
         # Construct Network
-        net = Network(list_node=list_node, mc_list=mc_list, target=target, package_size=package_size)
+        net_log_file = "log/network_log_{}_{}_{}.csv".format(experiment_type, experiment_index, nb_run)
+        MC_log_file = "log/MC_log_{}_{}_{}.csv".format(experiment_type, experiment_index, nb_run)
+        net = Network(list_node=list_node, mc_list=mc_list, target=target, package_size=package_size, net_log_file=net_log_file, MC_log_file=MC_log_file)
         
         # Initialize Q-learning Optimizer
         q_learning = Q_learningv2(nb_action=clusters, alpha=alpha, q_alpha=q_alpha, q_gamma=q_gamma)
         
-        print("Experiment {}, index {}, repeat {}:\n".format(experiment_type, experiment_index, nb_run))
-        print("Network:\n\t{} Sensors, {} Targets, Package Frequency: {}, Package size: {}Bytes, Number of MCs: {}".format(len(net.node), len(net.target), prob, package_size, nb_mc))
-        print("Optimizer Q_learning Kmeans:\n\tQ-alpha: {}, Q-gamma: {}, Theta: {}, Number of clusters: {}".format(q_learning.q_alpha, q_learning.q_gamma, q_learning.alpha, clusters))
+        print("[Simulator]Initializing experiment({}, {}), repetition {}:\n".format(experiment_type, experiment_index, nb_run))
+        print("[Simulator] Network:")
+        print(tabulate([['Sensors', len(net.node)], ['Targets', len(net.target)], ['Package Size', package_size], ['Sending Freq', prob], ['MC', nb_mc]], headers=['Parameters', 'Value']), '\n')
+        print("[Simulator] Optimizer:")
+        print(tabulate([['Alpha', q_learning.q_alpha], ['Gamma', q_learning.q_gamma], ['Theta', q_learning.alpha]], headers=['Parameters', 'Value']), '\n')
         
         # Define log file
         file_name = "log/q_learning_Kmeans_{}_{}_{}.csv".format(experiment_type, experiment_index, nb_run)
@@ -86,7 +107,7 @@ def start_simulating():
             writer = csv.DictWriter(information_log, fieldnames=["time", "nb_dead_node", "nb_package"])
             writer.writeheader()
         
-        temp = net.simulate(exp_type=experiment_type, exp_index=experiment_index, nb_run=nb_run, optimizer=q_learning, t=0, dead_time=0, file_name=file_name)
+        temp = net.simulate(exp_type=experiment_type, exp_index=experiment_index, nb_run=nb_run, optimizer=q_learning, t=0, dead_time=0)
         life_time.append(temp[0])
         result.writerow({"nb_run": nb_run, "lifetime": temp[0], "dead_node": temp[1]})
 
@@ -95,25 +116,10 @@ def start_simulating():
     result.writerow({"nb_run": mean(life_time), "lifetime": h, "dead_node": 0})
 
 def resume_simulating():
-    experiment_type  = None
-    experiment_index = None
-    print('Resuming Experiment...')
-    while True:
-        experiment_type = input('Enter Experiment type(node/target/MC/prob/cluster): ')
-        experiment_index = int(input('Enter Experiment index(0..4): '))
-        if exists('checkpoint/checkpoint_{}_{}.pkl'.format(experiment_type, experiment_index)):
-            print('Checkpoint found!!!')
-            break
-        else:
-            print('No checkpoint found!!!')
-    print('------------------------------------------------------------------------------')
+    print('[Simulator]Resuming Experiment...')
+    checkpoint, experiment_type, experiment_index = get_experiment('resume')
 
-    checkpoint = None
-    checkpoint_file = 'checkpoint/checkpoint_{}_{}.pkl'.format(experiment_type, experiment_index)
-    with open(checkpoint_file, 'rb') as f:
-        checkpoint = pickle.load(f)
-
-    print('Resuming Experiment {} index {} repeat {} at {}s...'.format(experiment_type, experiment_index, checkpoint['nb_run'], checkpoint['time']))
+    print('[Simulator]Resuming experiment ({}, {}) repetition {}, at {}s.'.format(experiment_type, experiment_index, checkpoint['nb_run'], checkpoint['time']))
     
     net         = checkpoint['network']
     optimizer   = checkpoint['optimizer']
@@ -121,7 +127,7 @@ def resume_simulating():
     dead_time   = checkpoint['dead_time']
     nb_run      = checkpoint['nb_run']
     log_file    = "log/q_learning_Kmeans_{}_{}_{}.csv".format(experiment_type, experiment_index, nb_run)
-    lifetime    = net.simulate(exp_type=experiment_type, exp_index=experiment_index, nb_run=nb_run, optimizer=optimizer, t=time, dead_time=dead_time, file_name=log_file)
+    lifetime    = net.simulate(exp_type=experiment_type, exp_index=experiment_index, nb_run=nb_run, optimizer=optimizer, t=time, dead_time=dead_time)
 
 # Read experiment data into Dataframe
 print('.------------------------------------------------------------------------------.')
