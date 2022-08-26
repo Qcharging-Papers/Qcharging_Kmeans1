@@ -9,24 +9,26 @@
 
 ## Prerequisites:
 
-- `pandas>=1.1.3`  
-- `scipy>=1.5.2`    
-- `numpy>=1.19.2`
-- `scikit_learn>=0.24.2`
+- `matplotlib==3.5.3`
+- `numpy==1.23.2`
+- `pandas==1.4.3`
+- `scikit_learn==1.1.2`
+- `scipy==1.9.0`
+
 
 ## Installation:
-1. Clone the repo:
+### 1. Clone the repo:
 ```bash
 $ git clone https://github.com/Qcharging-Papers/Qcharging_Kmeans1.git
 ```
-2. Install Prerequisites:
+### 2. Install Prerequisites:
 ```bash
 $ pip install -r requirements.txt
 ```
 
 ## Usage:
 
-1. Build Experiments:
+### 1. Build Experiments:
 - There are several built experiments in `./data`. However, new experiments can be built in the same format
 ```bash
 data
@@ -39,7 +41,7 @@ data
 ├── q_gamma.csv
 └── target.csv
 ```
-2. Run:
+### 2. Run:
 
 ```bash
 python3 simulate.py
@@ -56,7 +58,7 @@ python3 simulate.py
 | **package**                          | __500__ |   550   |   600   |   650    |   700  |
 | **cluster**                          |   40    |   50    |   60    |   70     | __80__ |
 
-- __Notes__: `Target` experiments must be *reconstructed* to match `node` experiments range if modified 
+- __Notes__: `target` experiments must be *reconstructed* to match `node` experiments range if modified 
 
 
 ## License:
