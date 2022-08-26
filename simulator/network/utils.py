@@ -32,7 +32,10 @@ def count_package_function(net):
             count += 1
     return count
 
-def set_checkpoint(t=0, exp_type='node', exp_index=4, nb_run=0, network=None, optimizer=None, dead_time=0):
+def set_checkpoint(t=0, network=None, optimizer=None, dead_time=0):
+    exp_index = int(network.experiment.split('_')[1])
+    exp_type = network.experiment.split('_')[0]
+    nb_run = int(network.experiment.split('_')[2])
     checkpoint = {
         'time'              : t,
         'experiment_type'   : exp_type,
@@ -44,4 +47,4 @@ def set_checkpoint(t=0, exp_type='node', exp_index=4, nb_run=0, network=None, op
     }
     with open('checkpoint/checkpoint_{}_{}.pkl'.format(exp_type, exp_index), 'wb') as f:
         pickle.dump(checkpoint, f)
-    print("Simulation checkpoint set at {}s".format(t))
+    print("[Simulator] Simulation checkpoint set at {}s".format(t))

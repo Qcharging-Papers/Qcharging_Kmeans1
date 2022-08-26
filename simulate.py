@@ -35,7 +35,7 @@ def get_experiment(simulation_type):
 
 
 def start_simulating():
-    print('[Simulator]Starting new experiment...')
+    print('[Simulator] Starting new experiment...')
     df, experiment_type, experiment_index = get_experiment('start')
 
 
@@ -81,7 +81,7 @@ def start_simulating():
         for id in range(nb_mc):
             mc = MobileCharger(id, energy=df.E_mc[experiment_index], capacity=df.E_max[experiment_index],
                             e_move=df.e_move[experiment_index],
-                            e_self_charge=df.e_mc[experiment_index], velocity=df.velocity[experiment_index])
+                            e_self_charge=df.e_mc[experiment_index], velocity=df.velocity[experiment_index], depot_state = clusters)
             mc_list.append(mc)
         
         # Initialize Targets
@@ -90,12 +90,13 @@ def start_simulating():
         # Construct Network
         net_log_file = "log/network_log_{}_{}_{}.csv".format(experiment_type, experiment_index, nb_run)
         MC_log_file = "log/MC_log_{}_{}_{}.csv".format(experiment_type, experiment_index, nb_run)
-        net = Network(list_node=list_node, mc_list=mc_list, target=target, package_size=package_size, net_log_file=net_log_file, MC_log_file=MC_log_file)
+        experiment = "{}_{}_{}".format(experiment_type, experiment_index, nb_run)
+        net = Network(list_node=list_node, mc_list=mc_list, target=target, package_size=package_size, experiment=experiment)
         
         # Initialize Q-learning Optimizer
         q_learning = Q_learningv2(nb_action=clusters, alpha=alpha, q_alpha=q_alpha, q_gamma=q_gamma)
         
-        print("[Simulator]Initializing experiment({}, {}), repetition {}:\n".format(experiment_type, experiment_index, nb_run))
+        print("[Simulator] Initializing experiment({}, {}), repetition {}:\n".format(experiment_type, experiment_index, nb_run))
         print("[Simulator] Network:")
         print(tabulate([['Sensors', len(net.node)], ['Targets', len(net.target)], ['Package Size', package_size], ['Sending Freq', prob], ['MC', nb_mc]], headers=['Parameters', 'Value']), '\n')
         print("[Simulator] Optimizer:")
@@ -107,7 +108,7 @@ def start_simulating():
             writer = csv.DictWriter(information_log, fieldnames=["time", "nb_dead_node", "nb_package"])
             writer.writeheader()
         
-        temp = net.simulate(exp_type=experiment_type, exp_index=experiment_index, nb_run=nb_run, optimizer=q_learning, t=0, dead_time=0)
+        temp = net.simulate(optimizer=q_learning, t=0, dead_time=0)
         life_time.append(temp[0])
         result.writerow({"nb_run": nb_run, "lifetime": temp[0], "dead_node": temp[1]})
 
@@ -116,10 +117,10 @@ def start_simulating():
     result.writerow({"nb_run": mean(life_time), "lifetime": h, "dead_node": 0})
 
 def resume_simulating():
-    print('[Simulator]Resuming Experiment...')
+    print('[Simulator] Resuming Experiment...')
     checkpoint, experiment_type, experiment_index = get_experiment('resume')
 
-    print('[Simulator]Resuming experiment ({}, {}) repetition {}, at {}s.'.format(experiment_type, experiment_index, checkpoint['nb_run'], checkpoint['time']))
+    print('[Simulator] Resuming experiment ({}, {}) repetition {}, at {}s.'.format(experiment_type, experiment_index, checkpoint['nb_run'], checkpoint['time']))
     
     net         = checkpoint['network']
     optimizer   = checkpoint['optimizer']
@@ -127,18 +128,20 @@ def resume_simulating():
     dead_time   = checkpoint['dead_time']
     nb_run      = checkpoint['nb_run']
     log_file    = "log/q_learning_Kmeans_{}_{}_{}.csv".format(experiment_type, experiment_index, nb_run)
-    lifetime    = net.simulate(exp_type=experiment_type, exp_index=experiment_index, nb_run=nb_run, optimizer=optimizer, t=time, dead_time=dead_time)
+    lifetime    = net.simulate(optimizer=optimizer, t=time, dead_time=dead_time)
 
 # Read experiment data into Dataframe
-print('.------------------------------------------------------------------------------.')
-print('| _       ______  _____ _   __   _____ _                 __      __            |')
-print('|| |     / / __ \/ ___// | / /  / ___/(_)___ ___  __  __/ /___ _/ /_____  _____|')
-print('|| | /| / / /_/ /\__ \/  |/ /   \__ \/ / __ `__ \/ / / / / __ `/ __/ __ \/ ___/|')
-print('|| |/ |/ / _, _/___/ / /|  /   ___/ / / / / / / / /_/ / / /_/ / /_/ /_/ / /    |')
-print('||__/|__/_/ |_|/____/_/ |_/   /____/_/_/ /_/ /_/\__,_/_/\__,_/\__/\____/_/     |')
-print('|                                                                              |')
-print('|-------------------------------------v1.2.1-----------------------------------|')
-print('`---------------------------Qlearning Kmeans Optimization----------------------/')
+
+print('----------------------------------------------------------------------------------------------------------------------------------------------------------')
+print(' █████   ███   █████ ███████████    █████████  ██████   █████     █████████   ███                             ████             █████                      ')
+print('░░███   ░███  ░░███ ░░███░░░░░███  ███░░░░░███░░██████ ░░███     ███░░░░░███ ░░░                             ░░███            ░░███                       ')
+print(' ░███   ░███   ░███  ░███    ░███ ░███    ░░░  ░███░███ ░███    ░███    ░░░  ████  █████████████   █████ ████ ░███   ██████   ███████    ██████  ████████ ')
+print(' ░███   ░███   ░███  ░██████████  ░░█████████  ░███░░███░███    ░░█████████ ░░███ ░░███░░███░░███ ░░███ ░███  ░███  ░░░░░███ ░░░███░    ███░░███░░███░░███')
+print(' ░░███  █████  ███   ░███░░░░░███  ░░░░░░░░███ ░███ ░░██████     ░░░░░░░░███ ░███  ░███ ░███ ░███  ░███ ░███  ░███   ███████   ░███    ░███ ░███ ░███ ░░░ ')
+print('  ░░░█████░█████░    ░███    ░███  ███    ░███ ░███  ░░█████     ███    ░███ ░███  ░███ ░███ ░███  ░███ ░███  ░███  ███░░███   ░███ ███░███ ░███ ░███     ')
+print('    ░░███ ░░███      █████   █████░░█████████  █████  ░░█████   ░░█████████  █████ █████░███ █████ ░░████████ █████░░████████  ░░█████ ░░██████  █████    ')
+print('     ░░░   ░░░      ░░░░░   ░░░░░  ░░░░░░░░░  ░░░░░    ░░░░░     ░░░░░░░░░  ░░░░░ ░░░░░ ░░░ ░░░░░   ░░░░░░░░ ░░░░░  ░░░░░░░░    ░░░░░   ░░░░░░  ░░░░░     ')                                                                                                                                                                         
+print('`-----------------------------------------------------------Qlearning Kmeans Optimization----------------------------------------------------------------/')
 print('Select one way to run Simulator:')
 print('\t1. Start')
 print('\t2. Resume (Requires checkpoint.pkl and log file)')

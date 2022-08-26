@@ -36,7 +36,7 @@ def init_function(nb_action=81):
 def get_weight(net, mc, q_learning, action_id, charging_time, receive_func=find_receiver):
     p = get_charge_per_sec(net, q_learning, action_id)
     all_path = get_all_path(net, receive_func)
-    time_move = distance.euclidean(q_learning.action_list[q_learning.state],
+    time_move = distance.euclidean(q_learning.action_list[mc.state],
                                    q_learning.action_list[action_id]) / mc.velocity
     list_dead = []
     w = [0 for _ in q_learning.list_request]
@@ -195,7 +195,7 @@ def node_distribution_plot(network, charging_pos):
     x_centroid = []
     y_centroid = []
     plt.hist(c_node, bins=100)
-    plt.show()
+    plt.savefig('fig/node_distribution.png')
 
 def network_plot(network, charging_pos):
     x_node = []
@@ -215,4 +215,4 @@ def network_plot(network, charging_pos):
     c_node = c_node / d * 80
     plt.scatter(x_node, y_node, s = c_node)
     plt.scatter(x_centroid, y_centroid, c='red', marker='^')
-    plt.show()
+    plt.savefig('fig/network_plot.png')

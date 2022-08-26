@@ -5,7 +5,9 @@
 
 
 ## About the Project 
+
  This Project is an implementation of a Q_learning based charging strategy with Kmeans network-clustering running on a WRSN Simulator with multiple mobile chargers.
+
 
 ## Prerequisites:
 
@@ -14,6 +16,7 @@
 - `pandas==1.4.3`
 - `scikit_learn==1.1.2`
 - `scipy==1.9.0`
+- `tabulate==0.8.10`
 
 
 ## Installation:
@@ -22,6 +25,12 @@
 $ git clone https://github.com/Qcharging-Papers/Qcharging_Kmeans1.git
 ```
 ### 2. Install Prerequisites:
+- Create and Activate virtual environment:
+```bash
+$ python -m venv env
+$ source /env/bin/activate
+```
+- Install libraries:
 ```bash
 $ pip install -r requirements.txt
 ```
