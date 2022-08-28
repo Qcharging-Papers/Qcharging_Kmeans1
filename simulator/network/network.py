@@ -75,7 +75,7 @@ class Network:
 
         if t == 0:
             with open(self.net_log_file, "w") as information_log:
-                writer = csv.DictWriter(information_log, fieldnames=['time_stamp', 'number_of_dead_nodes', 'number_of_monitored_target', 'lowest_node_energy', 'lowest_node_location', 'MC_0_status', 'MC_1_status', 'MC_2_status', 'MC_0_location', 'MC_1_location', 'MC_2_location'])
+                writer = csv.DictWriter(information_log, fieldnames=['time_stamp', 'number_of_dead_nodes', 'number_of_monitored_target', 'lowest_node_energy', 'lowest_node_location', 'avg_energy', 'MC_0_status', 'MC_1_status', 'MC_2_status', 'MC_0_location', 'MC_1_location', 'MC_2_location'])
                 writer.writeheader()
             
             with open(self.mc_log_file, "w") as mc_log:
@@ -95,7 +95,8 @@ class Network:
                     'number_of_dead_nodes' : self.count_dead_node(),
                     'number_of_monitored_target' : self.count_package(),
                     'lowest_node_energy': round(self.node[self.find_min_node()].energy, 3),
-                    'lowest_node_location': self.node[self.find_min_node()].location,
+                    'lowest_node_location': self.node[self.find_min_node()].location,     
+                    'avg_energy': self.get_average_energy(),
                     'MC_0_status' : self.mc_list[0].get_status(),
                     'MC_1_status' : self.mc_list[1].get_status(),
                     'MC_2_status' : self.mc_list[2].get_status(),
@@ -104,7 +105,7 @@ class Network:
                     'MC_2_location' : self.mc_list[2].current,
                 }
                 with open(self.net_log_file, 'a') as information_log:
-                    node_writer = csv.DictWriter(information_log, fieldnames=['time_stamp', 'number_of_dead_nodes', 'number_of_monitored_target', 'lowest_node_energy', 'lowest_node_location', 'MC_0_status', 'MC_1_status', 'MC_2_status', 'MC_0_location', 'MC_1_location', 'MC_2_location'])
+                    node_writer = csv.DictWriter(information_log, fieldnames=['time_stamp', 'number_of_dead_nodes', 'number_of_monitored_target', 'lowest_node_energy', 'lowest_node_location', 'avg_energy', 'MC_0_status', 'MC_1_status', 'MC_2_status', 'MC_0_location', 'MC_1_location', 'MC_2_location'])
                     node_writer.writerow(network_info)
                 for mc in self.mc_list:
                     print("\t\tMC #{} is {} at {}".format(mc.id, mc.get_status(), mc.current))
@@ -132,6 +133,7 @@ class Network:
                     'number_of_monitored_target' : self.count_package(),
                     'lowest_node_energy': round(self.node[self.find_min_node()].energy, 3),
                     'lowest_node_location': self.node[self.find_min_node()].location,
+                    'avg_energy': self.get_average_energy(),
                     'MC_0_status' : self.mc_list[0].get_status(),
                     'MC_1_status' : self.mc_list[1].get_status(),
                     'MC_2_status' : self.mc_list[2].get_status(),
@@ -174,6 +176,12 @@ class Network:
     def count_package(self, count_func=count_package_function):
         count = count_func(self)
         return count
+
+    def get_average_energy(self):
+        total = 0
+        for node in self.node:
+            total += node.avg_energy
+        return total/len(self.node)
 
     ##############################################################################################
     def simulate_lifetime(self, optimizer, file_name="log/energy_log.csv"):
